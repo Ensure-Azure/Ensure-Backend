@@ -1,6 +1,10 @@
-import type { Transaction } from "../../domain/entities/Transaction";
+import type { Transaction } from "@/domain/entities/Transaction";
 
 export interface TransactionRepository {
-  create(transaction: Transaction): Promise<Transaction>;
-  findByTransactionId(transactionId: string): Promise<Transaction | null>;
+  save(transaction: Transaction): Promise<Transaction>;
+
+  findById(
+    transactionId: string,
+    accountId: string,
+  ): Promise<Transaction | null>;
 }

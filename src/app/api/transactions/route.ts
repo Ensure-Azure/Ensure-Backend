@@ -3,29 +3,48 @@ import { createTransaction, getTransactionByTransactionId } from "../../../main"
 import {
   createTransactionSchema,
   transactionIdSchema,
+  accountIdSchema,
 } from "../../../infrastructure/validation/transaction.schema";
 
 export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const parsedTransactionId = transactionIdSchema.safeParse(
-    url.searchParams.get("transactionId"),
-  );
 
-  if (!parsedTransactionId.success) {
+  const parsedTransactionId =
+    transactionIdSchema.safeParse(
+      url.searchParams.get("transactionId"),
+    );
+
+  const parsedAccountId =
+    accountIdSchema.safeParse(
+      url.searchParams.get("accountId"),
+    );
+
+  if (
+    !parsedTransactionId.success ||
+    !parsedAccountId.success
+  ) {
     return Response.json(
-      { message: "A valid transactionId query parameter is required." },
+      {
+        message:
+          "Valid transactionId and accountId query parameters are required.",
+      },
       { status: 400 },
     );
   }
 
-  const transaction = await getTransactionByTransactionId.execute(
-    parsedTransactionId.data,
-  );
+  const transaction =
+    await getTransactionByTransactionId.execute(
+      parsedTransactionId.data,
+      parsedAccountId.data,
+    );
 
   if (!transaction) {
-    return Response.json({ message: "Transaction not found." }, { status: 404 });
+    return Response.json(
+      { message: "Transaction not found." },
+      { status: 404 },
+    );
   }
 
   return Response.json({
@@ -67,7 +86,9 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-
+    
+    console.error("Error creating transaction:", error);
+    
     return Response.json(
       { message: "Could not create transaction." },
       { status: 500 },

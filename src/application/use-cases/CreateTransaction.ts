@@ -9,11 +9,18 @@ export type CreateTransactionResult = {
 };
 
 export class CreateTransaction {
-  constructor(private readonly transactionRepository: TransactionRepository) {}
+  constructor(
+    private readonly transactionRepository: TransactionRepository,
+  ) {}
 
-  async execute(dto: CreateTransactionDTO): Promise<CreateTransactionResult> {
+  async execute(
+    dto: CreateTransactionDTO,
+  ): Promise<CreateTransactionResult> {
     const existingTransaction =
-      await this.transactionRepository.findByTransactionId(dto.transactionId);
+      await this.transactionRepository.findById(
+        dto.transactionId,
+        dto.accountId,
+      );
 
     if (existingTransaction) {
       return {
@@ -25,7 +32,10 @@ export class CreateTransaction {
     const transaction = Transaction.create({
       transactionId: dto.transactionId,
       accountId: dto.accountId,
-      money: Money.create(dto.amountMinor, dto.currency),
+      money: Money.create(
+        dto.amountMinor,
+        dto.currency,
+      ),
       type: dto.type,
       occurredAt: dto.occurredAt,
       latitude: dto.latitude,
@@ -34,12 +44,19 @@ export class CreateTransaction {
       city: dto.city,
       merchantId: dto.merchantId,
       merchantName: dto.merchantName,
-      merchantCategoryCode: dto.merchantCategoryCode,
-      destinationAccountId: dto.destinationAccountId,
+      merchantCategoryCode:
+        dto.merchantCategoryCode,
+      destinationAccountId:
+        dto.destinationAccountId,
     });
 
+    const savedTransaction =
+      await this.transactionRepository.save(
+        transaction,
+      );
+
     return {
-      transaction: await this.transactionRepository.create(transaction),
+      transaction: savedTransaction,
       created: true,
     };
   }
