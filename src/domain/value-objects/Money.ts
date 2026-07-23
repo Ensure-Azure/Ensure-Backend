@@ -2,7 +2,7 @@ type MoneyProps = {
   amountMinor: bigint;
   currency: string;
 };
-
+//test
 export class Money {
   private constructor(private readonly props: MoneyProps) {}
 
