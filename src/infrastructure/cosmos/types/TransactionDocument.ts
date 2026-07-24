@@ -16,7 +16,7 @@ export type TransactionDocument = {
     latitude: number;
     longitude: number;
     countryCode?: string;
-    city?: string;
+    city: string;
   };
 
   merchant?: {
@@ -25,7 +25,7 @@ export type TransactionDocument = {
     categoryCode?: string;
   };
 
-  destinationAccountId?: string;
+  destinationAccountId: string;
 
   status: TransactionStatus;
 };

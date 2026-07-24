@@ -26,7 +26,7 @@ export class CosmosTransactionMapper {
         latitude: transaction.latitude,
         longitude: transaction.longitude,
         countryCode: transaction.countryCode ?? undefined,
-        city: transaction.city ?? undefined,
+        city: transaction.city ?? "",
       },
       merchant:
         transaction.merchantId ||
@@ -42,7 +42,7 @@ export class CosmosTransactionMapper {
             }
           : undefined,
       destinationAccountId:
-        transaction.destinationAccountId ?? undefined,
+        transaction.destinationAccountId ?? "",
 
       status: transaction.status,
     };
