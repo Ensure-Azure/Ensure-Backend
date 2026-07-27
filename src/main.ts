@@ -1,9 +1,9 @@
 import { CreateTransaction } from "./application/use-cases/CreateTransaction";
 import { GetTransactionByTransactionId } from "./application/use-cases/GetTransactionByTransactionId";
-import { CosmosTransactionRepository } from "./infrastructure/cosmos/CosmosTransactionRepository";
+import { PrismaTransactionRepository } from "./infrastructure/persistence/PrismaTransactionRepository";
 
 const transactionRepository =
-  new CosmosTransactionRepository();
+  new PrismaTransactionRepository();
 
 export const createTransaction =
   new CreateTransaction(transactionRepository);
