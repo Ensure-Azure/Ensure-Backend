@@ -7,4 +7,15 @@ export interface TransactionRepository {
     transactionId: string,
     accountId: string,
   ): Promise<Transaction | null>;
+
+  findRecentByAccount(
+    accountId: string,
+    since: Date,
+    limit?: number,
+  ): Promise<Transaction[]>;
+
+  updateScoring(
+    transactionId: string,
+    status: "SCORED" | "FLAGGED" | "FAILED",
+  ): Promise<void>;
 }

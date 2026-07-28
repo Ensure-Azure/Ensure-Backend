@@ -1,5 +1,6 @@
 import type { CreateTransactionDTO } from "../dto/CreateTransactionDTO";
 import type { TransactionRepository } from "../ports/TransactionRepository";
+import type { TransactionEventPublisher } from "../ports/TransactionEventPublisher";
 import { Transaction } from "../../domain/entities/Transaction";
 import { Money } from "../../domain/value-objects/Money";
 
@@ -11,6 +12,7 @@ export type CreateTransactionResult = {
 export class CreateTransaction {
   constructor(
     private readonly transactionRepository: TransactionRepository,
+    private readonly transactionEventPublisher: TransactionEventPublisher,
   ) {}
 
   async execute(
@@ -54,6 +56,10 @@ export class CreateTransaction {
       await this.transactionRepository.save(
         transaction,
       );
+
+    await this.transactionEventPublisher.publishTransactionReceived(
+      savedTransaction,
+    );
 
     return {
       transaction: savedTransaction,
