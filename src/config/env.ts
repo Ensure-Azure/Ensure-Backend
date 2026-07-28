@@ -31,6 +31,12 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+
+  AZURE_STORAGE_CONNECTION_STRING: z
+    .string().min(1, "AZURE_STORAGE_CONNECTION_STRING is required."),
+
+  AZURE_STORAGE_CONTAINER_NAME: z
+    .string().min(1, "AZURE_STORAGE_CONTAINER_NAME is required."),
 });
 
 export type Env = z.infer<typeof envSchema>;
