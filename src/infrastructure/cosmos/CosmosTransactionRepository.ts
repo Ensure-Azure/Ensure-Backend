@@ -2,7 +2,7 @@ import type { TransactionRepository } from "@/application/ports/TransactionRepos
 import type { Transaction } from "@/domain/entities/Transaction";
 
 import { CosmosTransactionMapper } from "../mappers/CosmosTransactionMapper";
-import { transactionsContainer } from "./client";
+import { getTransactionsContainer } from "./client";
 import type { TransactionDocument } from "./types/TransactionDocument";
 
 export class CosmosTransactionRepository
@@ -13,9 +13,10 @@ export class CosmosTransactionRepository
     accountId: string,
   ): Promise<Transaction | null> {
     try {
-      const response = await transactionsContainer
-        .item(transactionId, accountId)
-        .read<TransactionDocument>();
+      const response =
+        await getTransactionsContainer()
+          .item(transactionId, accountId)
+          .read<TransactionDocument>();
 
       if (!response.resource) {
         return null;
@@ -45,7 +46,7 @@ export class CosmosTransactionRepository
       CosmosTransactionMapper.toPersistence(transaction);
 
     const response =
-      await transactionsContainer.items.create<TransactionDocument>(
+      await getTransactionsContainer().items.create<TransactionDocument>(
         document,
       );
 
@@ -57,6 +58,18 @@ export class CosmosTransactionRepository
 
     return CosmosTransactionMapper.toDomain(
       response.resource,
+    );
+  }
+
+  async findRecentByAccount(): Promise<Transaction[]> {
+    throw new Error(
+      "Cosmos recent account queries are not wired in this runtime.",
+    );
+  }
+
+  async updateScoring(): Promise<void> {
+    throw new Error(
+      "Cosmos scoring updates are not wired in this runtime.",
     );
   }
 }

@@ -2,7 +2,7 @@ import type { DocumentMetadataRepository } from "@/application/ports/DocumentMet
 import type { DocumentMetadata } from "@/domain/entities/DocumentMetadata";
 
 import { CosmosDocumentMetadataMapper } from "../mappers/CosmosDocumentMetadataMapper";
-import { documentMetadataContainer } from "./client";
+import { getDocumentMetadataContainer } from "./client";
 import type { DocumentMetadataDocument } from "./types/DocumentMetadataDocument";
 
 export class CosmosDocumentMetadataRepository
@@ -13,9 +13,10 @@ export class CosmosDocumentMetadataRepository
     accountId: string,
   ): Promise<DocumentMetadata | null> {
     try {
-      const response = await documentMetadataContainer
-        .item(id, accountId)
-        .read<DocumentMetadataDocument>();
+      const response =
+        await getDocumentMetadataContainer()
+          .item(id, accountId)
+          .read<DocumentMetadataDocument>();
 
       if (!response.resource) {
         return null;
@@ -47,7 +48,7 @@ export class CosmosDocumentMetadataRepository
       );
 
     const response =
-      await documentMetadataContainer.items.create<DocumentMetadataDocument>(
+      await getDocumentMetadataContainer().items.create<DocumentMetadataDocument>(
         document,
       );
 

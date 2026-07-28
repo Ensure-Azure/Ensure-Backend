@@ -37,4 +37,43 @@ export class PrismaTransactionRepository
       ? PrismaTransactionMapper.toDomain(transaction)
       : null;
   }
+
+  async findRecentByAccount(
+    accountId: string,
+    since: Date,
+    limit = 100,
+  ): Promise<Transaction[]> {
+    const transactions =
+      await prisma.transactions.findMany({
+        where: {
+          account_id: accountId,
+          occurred_at: {
+            gte: since,
+          },
+        },
+        orderBy: {
+          occurred_at: "desc",
+        },
+        take: limit,
+      });
+
+    return transactions.map((transaction) =>
+      PrismaTransactionMapper.toDomain(transaction),
+    );
+  }
+
+  async updateScoring(
+    transactionId: string,
+    status: "SCORED" | "FLAGGED" | "FAILED",
+  ): Promise<void> {
+    await prisma.transactions.update({
+      where: {
+        transaction_id: transactionId,
+      },
+      data: {
+        status,
+        updated_at: new Date(),
+      },
+    });
+  }
 }

@@ -28,6 +28,13 @@ const envSchema = z.object({
       "COSMOS_DOCUMENTS_CONTAINER_ID is required.",
     ),
 
+  TRANSACTION_EVENT_WEBHOOK_URL: z
+    .string()
+    .url(
+      "TRANSACTION_EVENT_WEBHOOK_URL must be a valid URL.",
+    )
+    .optional(),
+
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
