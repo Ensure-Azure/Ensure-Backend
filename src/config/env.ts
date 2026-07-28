@@ -21,6 +21,13 @@ const envSchema = z.object({
     .string()
     .min(1, "COSMOS_CONTAINER_ID is required."),
 
+  COSMOS_DOCUMENTS_CONTAINER_ID: z
+    .string()
+    .min(
+      1,
+      "COSMOS_DOCUMENTS_CONTAINER_ID is required.",
+    ),
+
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),

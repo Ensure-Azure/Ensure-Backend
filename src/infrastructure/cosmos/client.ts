@@ -17,3 +17,8 @@ export const transactionsContainer =
   cosmosDatabase.container(
     env.COSMOS_CONTAINER_ID,
   );
+
+export const documentMetadataContainer =
+  cosmosDatabase.container(
+    env.COSMOS_DOCUMENTS_CONTAINER_ID,
+  );  
