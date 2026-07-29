@@ -3,7 +3,7 @@ name: Deploy a Azure App Service
 on:
   push:
     branches:
-      - main # O tu rama principal
+      - main
 
 jobs:
   build-and-deploy:
@@ -13,11 +13,25 @@ jobs:
     - name: Descargar el código
       uses: actions/checkout@v4
 
-    # Aquí compilas/construyes tu proyecto (Node, .NET, Python, etc.)   
-    # ...
+    # 1. Configurar el entorno de Node.js
+    - name: Configurar Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '25'
+        cache: 'npm'
 
+    # 2. Instalar las dependencias exactas
+    - name: Instalar dependencias
+      run: npm ci
+
+    # 3. Compilar el proyecto de Next.js
+    - name: Construir el proyecto
+      run: npm run build
+
+    # 4. Desplegar en Azure App Service
     - name: Desplegar en Azure App Service
-      uses: azure/webapps-deploy@v2
+      uses: azure/webapps-deploy@v3
       with:
         app-name: 'appservicecentineladev'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: '.'
