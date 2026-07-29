@@ -24,11 +24,20 @@ jobs:
     - name: Instalar dependencias
       run: npm ci
 
-    # 3. Compilar el proyecto de Next.js
+    # 3. Generar el cliente de Prisma
+    - name: Generar Prisma Client
+      run: npx prisma generate
+
+    # 4. Compilar el proyecto inyectando las variables requeridas
     - name: Construir el proyecto
+      env:
+        AZURE_STORAGE_CONNECTION_STRING: "UseDevelopmentStorage=true"
+        COSMOS_DB_ENDPOINT: "https://localhost:8081"
+        COSMOS_DB_KEY: "dummy-key"
+        DATABASE_URL: "postgresql://user:password@localhost:5432/db"
       run: npm run build
 
-    # 4. Desplegar en Azure App Service
+    # 5. Desplegar en Azure App Service
     - name: Desplegar en Azure App Service
       uses: azure/webapps-deploy@v3
       with:
