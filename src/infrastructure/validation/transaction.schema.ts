@@ -3,15 +3,24 @@ import { z } from "zod";
 const MAX_AMOUNT_MINOR = BigInt("1000000000000");
 
 const optionalTrimmedString = (max: number) =>
-  z
-    .string()
-    .trim()
-    .min(1)
-    .max(max)
-    .optional()
-    .nullable();
+  z.preprocess((value) => {
+    if (value === null || value === undefined) {
+      return null;
+    }
 
-export const transactionIdSchema = z.uuid();
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+
+    return value;
+  }, z.string().trim().min(1).max(max).nullable().optional());
+
+export const transactionIdSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100);
 
 export const accountIdSchema = z
   .string()
@@ -37,11 +46,17 @@ export const createTransactionSchema = z
       .regex(/^[A-Za-z]{3}$/)
       .transform((value) => value.toUpperCase()),
 
-    type: z.enum([
-      "PURCHASE",
-      "TRANSFER",
-      "WITHDRAWAL",
-    ]),
+    type: z
+      .string()
+      .trim()
+      .transform((value) => value.toUpperCase())
+      .pipe(
+        z.enum([
+          "PURCHASE",
+          "TRANSFER",
+          "WITHDRAWAL",
+        ]),
+      ),
 
     occurredAt: z.coerce
       .date()
@@ -84,7 +99,7 @@ export const createTransactionSchema = z
     destinationAccountId:
       optionalTrimmedString(100),
   })
-  .strict()
+  .passthrough()
   .superRefine((value, context) => {
     if (
       value.type === "PURCHASE" &&

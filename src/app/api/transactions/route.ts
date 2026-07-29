@@ -10,16 +10,24 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const transactionIdParam = url.searchParams.get("transactionId");
+  const accountIdParam = url.searchParams.get("accountId");
+
+  if (!transactionIdParam || !accountIdParam) {
+    return Response.json(
+      {
+        message:
+          "Transaction lookup requires transactionId and accountId query parameters.",
+      },
+      { status: 404 },
+    );
+  }
 
   const parsedTransactionId =
-    transactionIdSchema.safeParse(
-      url.searchParams.get("transactionId"),
-    );
+    transactionIdSchema.safeParse(transactionIdParam);
 
   const parsedAccountId =
-    accountIdSchema.safeParse(
-      url.searchParams.get("accountId"),
-    );
+    accountIdSchema.safeParse(accountIdParam);
 
   if (
     !parsedTransactionId.success ||
@@ -28,7 +36,7 @@ export async function GET(request: Request) {
     return Response.json(
       {
         message:
-          "Valid transactionId and accountId query parameters are required.",
+          "Invalid transactionId or accountId query parameters.",
       },
       { status: 400 },
     );
