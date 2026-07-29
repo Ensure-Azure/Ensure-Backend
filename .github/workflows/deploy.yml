@@ -10,34 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Descargar el código
+    - name: Download the code
       uses: actions/checkout@v4
 
-    # 1. Configurar el entorno de Node.js
-    - name: Configurar Node.js
+    - name: Configurate Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '25'
         cache: 'npm'
 
-    # 2. Instalar las dependencias exactas
-    - name: Instalar dependencias
+    - name: Install dependences
       run: npm ci
 
-    # 3. Generar el cliente de Prisma
-    - name: Generar Prisma Client
+    - name: Generate Prisma Client
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
       run: npx prisma generate
 
-    # 4. Compilar el proyecto inyectando las variables requeridas
-    - name: Construir el proyecto
+    - name: Build the project
       env:
-        AZURE_STORAGE_CONNECTION_STRING: "UseDevelopmentStorage=true"
-        COSMOS_DB_ENDPOINT: "https://localhost:8081"
-        COSMOS_DB_KEY: "dummy-key"
-        DATABASE_URL: "postgresql://user:password@localhost:5432/db"
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        COSMOS_ENDPOINT: ${{ secrets.COSMOS_ENDPOINT }}
+        COSMOS_KEY: ${{ secrets.COSMOS_KEY }}
+        COSMOS_DATABASE_ID: ${{ secrets.COSMOS_DATABASE_ID }}
+        COSMOS_CONTAINER_ID: ${{ secrets.COSMOS_CONTAINER_ID }}
+        COSMOS_DOCUMENTS_CONTAINER_ID: ${{ secrets.COSMOS_DOCUMENTS_CONTAINER_ID }}
+        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
       run: npm run build
 
-    # 5. Desplegar en Azure App Service
     - name: Desplegar en Azure App Service
       uses: azure/webapps-deploy@v3
       with:
