@@ -10,3 +10,9 @@ export type UploadBlobResult = {
   sizeBytes: number;
   etag:string;
 };
+
+export type DownloadBlobResult = {
+  content: Buffer;
+  contentType: string;
+  sizeBytes: number;
+};

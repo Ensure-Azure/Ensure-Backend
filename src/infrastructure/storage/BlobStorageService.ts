@@ -3,6 +3,7 @@ import { documentsContainer } from "./client";
 import type {
   UploadBlobInput,
   UploadBlobResult,
+  DownloadBlobResult,
 } from "./blob";
 
 export class BlobStorageService {
@@ -32,6 +33,33 @@ export class BlobStorageService {
     };
   }
 
+  async download(
+    blobName: string,
+  ): Promise<DownloadBlobResult | null> {
+    const blockBlobClient =
+      documentsContainer.getBlockBlobClient(blobName);
+
+    const exists = await blockBlobClient.exists();
+
+    if (!exists) {
+      return null;
+    }
+
+    const properties =
+      await blockBlobClient.getProperties();
+
+    const content =
+      await blockBlobClient.downloadToBuffer();
+
+    return {
+      content,
+      contentType:
+        properties.contentType ??
+        "application/octet-stream",
+      sizeBytes: content.byteLength,
+    };
+  }
+
   async delete(blobName: string): Promise<boolean> {
     const blockBlobClient =
       documentsContainer.getBlockBlobClient(
@@ -58,6 +86,8 @@ export class BlobStorageService {
       blobName,
     ).url;
   }
+
+
 }
 
 export const blobStorageService =
