@@ -1,4 +1,3 @@
-import { ZodError } from "zod";
 import {
   createTransaction,
   getTransactionByTransactionId,
@@ -109,9 +108,13 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    console.log("[POST transactions] Inicio");
+
     const rateLimit = transactionIngestionRateLimiter.check(
       getRequestOrigin(request),
     );
+
+    console.log("[POST transactions] Rate limit correcto");
 
     if (!rateLimit.allowed) {
       return Response.json(
@@ -131,7 +134,16 @@ export async function POST(request: Request) {
     }
 
     const body = await parseJsonBody(request);
-    const parsedBody = createTransactionSchema.safeParse(body);
+
+    console.log("[POST transactions] Body recibido:", body);
+
+    const parsedBody =
+      createTransactionSchema.safeParse(body);
+
+    console.log(
+      "[POST transactions] Resultado validación:",
+      parsedBody.success,
+    );
 
     if (!parsedBody.success) {
       return Response.json(
@@ -139,9 +151,19 @@ export async function POST(request: Request) {
           message: "Invalid transaction payload.",
           issues: parsedBody.error.issues,
         },
-        { status: 400 },
+        {
+          status: 400,
+          headers: {
+            "X-RateLimit-Limit":
+              rateLimit.limit.toString(),
+            "X-RateLimit-Remaining":
+              rateLimit.remaining.toString(),
+          },
+        },
       );
     }
+
+    console.log("[POST transactions] Ejecutando caso de uso");
 
     const result = await createTransaction.execute(
       parsedBody.data,
@@ -151,41 +173,47 @@ export async function POST(request: Request) {
       {
         accepted: true,
         duplicate: !result.created,
-        transactionId: result.transaction.transactionId,
+        transactionId:
+          result.transaction.transactionId,
         id: result.transaction.id,
         status: result.transaction.status,
-        receivedAt: result.transaction.receivedAt.toISOString(),
+        receivedAt:
+          result.transaction.receivedAt.toISOString(),
       },
       {
         status: result.created ? 202 : 200,
         headers: {
-          "X-RateLimit-Limit": rateLimit.limit.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+          "X-RateLimit-Limit":
+            rateLimit.limit.toString(),
+          "X-RateLimit-Remaining":
+            rateLimit.remaining.toString(),
         },
       },
     );
   } catch (error) {
-    if (error instanceof ZodError) {
-      return Response.json(
-        {
-          message: "Invalid transaction payload.",
-          issues: error.issues,
-        },
-        { status: 400 },
-      );
-    }
+    console.error(
+      "[POST transactions] Error completo:",
+      error,
+    );
 
-    if (error instanceof SyntaxError) {
-      return Response.json(
-        { message: "Request body must be valid JSON." },
-        { status: 400 },
-      );
-    }
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : String(error);
 
-    console.error("Error creating transaction:", error);
+    const errorName =
+      error instanceof Error
+        ? error.name
+        : "UnknownError";
 
     return Response.json(
-      { message: "Could not create transaction." },
+      {
+        message: "Could not create transaction.",
+        debug: {
+          name: errorName,
+          error: errorMessage,
+        },
+      },
       { status: 500 },
     );
   }
