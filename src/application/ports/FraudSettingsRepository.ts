@@ -10,6 +10,13 @@ export type FraudSettings = {
   riskyMerchantDefaultPoints: number;
 };
 
+export class FraudSettingsConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "FraudSettingsConfigurationError";
+  }
+}
+
 export interface FraudSettingsRepository {
   getSettings(): Promise<FraudSettings>;
 
