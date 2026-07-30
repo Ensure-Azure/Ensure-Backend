@@ -1,5 +1,9 @@
 import type { FraudCaseRepository } from "../ports/FraudCaseRepository";
-import type { FraudSettingsRepository } from "../ports/FraudSettingsRepository";
+import {
+  FraudSettingsConfigurationError,
+  type FraudSettings,
+  type FraudSettingsRepository,
+} from "../ports/FraudSettingsRepository";
 import type { TransactionRepository } from "../ports/TransactionRepository";
 import { buildFraudExplanation } from "@/domain/fraud/explanation";
 import {
@@ -44,8 +48,20 @@ export class ScoreTransaction {
       throw new TransactionToScoreNotFoundError();
     }
 
-    const settings =
-      await this.fraudSettingsRepository.getSettings();
+    let settings: FraudSettings;
+
+    try {
+      settings = await this.fraudSettingsRepository.getSettings();
+    } catch (error) {
+      if (error instanceof FraudSettingsConfigurationError) {
+        await this.transactionRepository.updateScoring(
+          transaction.transactionId,
+          "FAILED",
+        );
+      }
+
+      throw error;
+    }
     const historicalSince = new Date(
       transaction.occurredAt.getTime() -
         30 * 24 * 60 * 60 * 1000,

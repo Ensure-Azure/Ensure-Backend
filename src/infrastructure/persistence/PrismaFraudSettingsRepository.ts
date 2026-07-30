@@ -1,20 +1,21 @@
-import type {
-  FraudSettings,
-  FraudSettingsRepository,
+import {
+  FraudSettingsConfigurationError,
+  type FraudSettings,
+  type FraudSettingsRepository,
 } from "@/application/ports/FraudSettingsRepository";
 import type { RiskyMerchant } from "@/domain/fraud/types";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../database/prisma";
 
-const DEFAULT_SETTINGS: FraudSettings = {
-  scoreThreshold: 60,
-  velocityWindowMinutes: 3,
-  velocityMaxTransactions: 8,
-  atypicalAmountMultiplier: 10,
-  atypicalAmountMinimumSamples: 3,
-  impossibleTravelMaxKmh: 900,
-  riskyMerchantDefaultPoints: 20,
-};
+const REQUIRED_SETTING_KEYS = [
+  "scoreThreshold",
+  "velocityWindowMinutes",
+  "velocityMaxTransactions",
+  "atypicalAmountMultiplier",
+  "atypicalAmountMinimumSamples",
+  "impossibleTravelMaxKmh",
+  "riskyMerchantDefaultPoints",
+] as const satisfies readonly (keyof FraudSettings)[];
 
 export class PrismaFraudSettingsRepository
   implements FraudSettingsRepository
@@ -23,18 +24,49 @@ export class PrismaFraudSettingsRepository
     const rows = await prisma.fraud_settings.findMany({
       where: {
         setting_key: {
-          in: Object.keys(DEFAULT_SETTINGS),
+          in: [...REQUIRED_SETTING_KEYS],
         },
       },
     });
 
-    return rows.reduce<FraudSettings>(
-      (settings, row) => ({
-        ...settings,
-        [row.setting_key]: Number(row.setting_value),
-      }),
-      DEFAULT_SETTINGS,
+    const values = new Map(
+      rows.map((row) => [
+        row.setting_key,
+        Number(row.setting_value),
+      ]),
     );
+    const missing = REQUIRED_SETTING_KEYS.filter(
+      (key) => !values.has(key),
+    );
+    const invalid = REQUIRED_SETTING_KEYS.filter((key) => {
+      const value = values.get(key);
+
+      return !Number.isFinite(value) || value === undefined || value <= 0;
+    });
+
+    if (missing.length > 0 || invalid.length > 0) {
+      const details = [
+        missing.length > 0
+          ? `missing: ${missing.join(", ")}`
+          : null,
+        invalid.length > 0
+          ? `invalid: ${invalid.join(", ")}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join("; ");
+
+      throw new FraudSettingsConfigurationError(
+        `Fraud scoring settings are not valid (${details}).`,
+      );
+    }
+
+    return Object.fromEntries(
+      REQUIRED_SETTING_KEYS.map((key) => [
+        key,
+        values.get(key),
+      ]),
+    ) as FraudSettings;
   }
 
   async findRiskyMerchant(input: {

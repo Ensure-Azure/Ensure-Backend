@@ -1,6 +1,7 @@
 import { ZodError } from "zod";
 import { scoreTransaction } from "../../../../main";
 import { TransactionToScoreNotFoundError } from "../../../../application/use-cases/ScoreTransaction";
+import { FraudSettingsConfigurationError } from "../../../../application/ports/FraudSettingsRepository";
 import { transactionReceivedEventSchema } from "../../../../infrastructure/validation/event.schema";
 
 export const runtime = "nodejs";
@@ -51,6 +52,21 @@ export async function POST(request: Request) {
             "Transaction not found. Ingest the transaction before sending the scoring event.",
         },
         { status: 404 },
+      );
+    }
+
+    if (error instanceof FraudSettingsConfigurationError) {
+      console.error(
+        "Fraud scoring configuration error:",
+        error.message,
+      );
+
+      return Response.json(
+        {
+          message:
+            "Fraud scoring is unavailable because its configuration is incomplete.",
+        },
+        { status: 503 },
       );
     }
 

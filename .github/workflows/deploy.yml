@@ -10,25 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Descargar el código
+    - name: Download the code
       uses: actions/checkout@v4
 
-    # 1. Configurar el entorno de Node.js
-    - name: Configurar Node.js
+    - name: Configurate Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '25'
         cache: 'npm'
 
-    # 2. Instalar las dependencias exactas
-    - name: Instalar dependencias
+    - name: Install dependences
       run: npm ci
 
-    # 3. Compilar el proyecto de Next.js
-    - name: Construir el proyecto
+    - name: Generate Prisma Client
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
+      run: npx prisma generate
+
+    - name: Build the project
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        COSMOS_ENDPOINT: ${{ secrets.COSMOS_ENDPOINT }}
+        COSMOS_KEY: ${{ secrets.COSMOS_KEY }}
+        COSMOS_DATABASE_ID: ${{ secrets.COSMOS_DATABASE_ID }}
+        COSMOS_CONTAINER_ID: ${{ secrets.COSMOS_CONTAINER_ID }}
+        COSMOS_DOCUMENTS_CONTAINER_ID: ${{ secrets.COSMOS_DOCUMENTS_CONTAINER_ID }}
+        AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+        AZURE_STORAGE_CONTAINER_NAME: ${{ secrets.AZURE_STORAGE_CONTAINER_NAME }}
       run: npm run build
 
-    # 4. Desplegar en Azure App Service
     - name: Desplegar en Azure App Service
       uses: azure/webapps-deploy@v3
       with:
