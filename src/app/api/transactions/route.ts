@@ -131,8 +131,21 @@ export async function POST(request: Request) {
     }
 
     const body = await parseJsonBody(request);
-    const dto = createTransactionSchema.parse(body);
-    const result = await createTransaction.execute(dto);
+    const parsedBody = createTransactionSchema.safeParse(body);
+
+    if (!parsedBody.success) {
+      return Response.json(
+        {
+          message: "Invalid transaction payload.",
+          issues: parsedBody.error.issues,
+        },
+        { status: 400 },
+      );
+    }
+
+    const result = await createTransaction.execute(
+      parsedBody.data,
+    );
 
     return Response.json(
       {
@@ -168,9 +181,9 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-    
+
     console.error("Error creating transaction:", error);
-    
+
     return Response.json(
       { message: "Could not create transaction." },
       { status: 500 },
