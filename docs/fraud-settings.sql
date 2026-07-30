@@ -1,6 +1,3 @@
--- Configuración inicial del motor de scoring.
--- Es idempotente: conserva valores que ya hayan sido ajustados por un administrador.
-
 INSERT INTO fraud_settings (
   setting_key,
   setting_value,
