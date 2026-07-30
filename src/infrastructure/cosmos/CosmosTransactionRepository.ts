@@ -115,7 +115,7 @@ export class CosmosTransactionRepository
 
     if (!response.resource) {
       throw new Error(
-        "Cosmos DB no devolvió la transacción creada.",
+        "Cosmos DB did not return the created transaction.",
       );
     }
 

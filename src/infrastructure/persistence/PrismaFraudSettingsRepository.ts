@@ -15,7 +15,7 @@ const REQUIRED_SETTING_KEYS = [
   "atypicalAmountMinimumSamples",
   "impossibleTravelMaxKmh",
   "riskyMerchantDefaultPoints",
-] as const;
+] as const satisfies readonly (keyof FraudSettings)[];
 
 export class PrismaFraudSettingsRepository
   implements FraudSettingsRepository
@@ -24,7 +24,7 @@ export class PrismaFraudSettingsRepository
     const rows = await prisma.fraud_settings.findMany({
       where: {
         setting_key: {
-          in: REQUIRED_SETTING_KEYS,
+          in: [...REQUIRED_SETTING_KEYS],
         },
       },
     });

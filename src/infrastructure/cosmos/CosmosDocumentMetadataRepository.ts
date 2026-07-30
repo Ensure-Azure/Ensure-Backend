@@ -54,7 +54,7 @@ export class CosmosDocumentMetadataRepository
 
     if (!response.resource) {
       throw new Error(
-        "Cosmos DB no devolvió los metadatos del documento creado.",
+        "Cosmos DB did not return the metadata for the created document.",
       );
     }
 

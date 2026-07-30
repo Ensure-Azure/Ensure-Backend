@@ -59,12 +59,12 @@ export function getEnv(): Env {
 
   if (!result.success) {
     console.error(
-      "Variables de entorno inválidas:",
+      "invalid environment variables",
       result.error.flatten().fieldErrors,
     );
 
     throw new Error(
-      "La configuración de variables de entorno es inválida.",
+      "The environment variable configuration is invalid.",
     );
   }
 

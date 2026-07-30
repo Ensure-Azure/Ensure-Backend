@@ -1,14 +1,14 @@
-# Controles de seguridad de ingesta y scoring
+# Security controls for intake and scoring
 
-## Límite de tasa
+## Rate limit
 
-`POST /api/transactions` admite como máximo 60 solicitudes por origen en una ventana fija de un minuto. El origen se obtiene del primer valor de `X-Forwarded-For`, que Azure App Service establece al reenviar la solicitud. Al exceder el límite, la API responde `429 Too Many Requests` e incluye `Retry-After`, `X-RateLimit-Limit` y `X-RateLimit-Remaining`.
+`POST /api/transactions` allows up to 60 requests from one origin in one minute. The origin comes from the first value of `X-Forwarded-For`. Azure App Service sets this value when it sends the request to the app. If the origin sends too many requests, the API returns `429 Too Many Requests`. It also returns `Retry-After`, `X-RateLimit-Limit`, and `X-RateLimit-Remaining`.
 
-El límite protege el presupuesto: cada transacción aceptada puede publicar un evento y activar el motor de scoring. Sesenta solicitudes por minuto permite una carga de demostración sostenida sin permitir ráfagas ilimitadas. El contador reside en memoria de la instancia, por lo que el límite se aplica por instancia de App Service. Si el servicio se escala horizontalmente, debe sustituirse por un contador compartido antes de tratarlo como un límite global.
+The limit protects the budget. Each accepted transaction can send an event and start the scoring engine. Sixty requests per minute is enough for a demo load, but it does not allow unlimited traffic. The counter is in the memory of one app instance. So the limit works per App Service instance. If the service uses many instances, use one shared counter before using this as a global limit.
 
-## Configuración obligatoria de scoring
+## Required scoring settings
 
-El motor no usa valores por defecto. Antes de puntuar una transacción, exige que existan en `fraud_settings` y tengan un número positivo los siguientes valores:
+The engine does not use default values. Before it scores a transaction, these values must exist in `fraud_settings`. Each value must be a positive number:
 
 - `scoreThreshold`
 - `velocityWindowMinutes`
@@ -18,6 +18,6 @@ El motor no usa valores por defecto. Antes de puntuar una transacción, exige qu
 - `impossibleTravelMaxKmh`
 - `riskyMerchantDefaultPoints`
 
-Si falta o es inválido alguno, la transacción queda con estado `FAILED`, se registra un error en el servidor y `POST /api/events/transactions` devuelve `503`. Así una configuración incompleta no deja transacciones sin analizar de forma silenciosa.
+If one value is missing or not valid, the transaction gets the `FAILED` status. The server logs an error, and `POST /api/events/transactions` returns `503`. This helps the team see the problem. It does not leave transactions without analysis in silence.
 
-La configuración inicial está en `docs/fraud-settings.sql`. El script solo inserta claves ausentes y no sobrescribe los valores que un administrador haya ajustado.
+The first settings are in `docs/fraud-settings.sql`. The script only adds missing keys. It does not replace values changed by an admin.
