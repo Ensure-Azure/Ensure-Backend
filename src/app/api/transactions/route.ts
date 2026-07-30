@@ -10,6 +10,8 @@ import {
   accountIdSchema,
   listTransactionsQuerySchema,
 } from "../../../infrastructure/validation/transaction.schema";
+import { getRequestOrigin } from "../../../infrastructure/security/requestOrigin";
+import { transactionIngestionRateLimiter } from "../../../infrastructure/security/transactionIngestionRateLimiter";
 
 export const runtime = "nodejs";
 
@@ -107,6 +109,27 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const rateLimit = transactionIngestionRateLimiter.check(
+      getRequestOrigin(request),
+    );
+
+    if (!rateLimit.allowed) {
+      return Response.json(
+        {
+          message:
+            "Too many transaction ingestion requests. Try again later.",
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": rateLimit.retryAfterSeconds.toString(),
+            "X-RateLimit-Limit": rateLimit.limit.toString(),
+            "X-RateLimit-Remaining": "0",
+          },
+        },
+      );
+    }
+
     const body = await parseJsonBody(request);
     const dto = createTransactionSchema.parse(body);
     const result = await createTransaction.execute(dto);
@@ -120,7 +143,13 @@ export async function POST(request: Request) {
         status: result.transaction.status,
         receivedAt: result.transaction.receivedAt.toISOString(),
       },
-      { status: result.created ? 202 : 200 },
+      {
+        status: result.created ? 202 : 200,
+        headers: {
+          "X-RateLimit-Limit": rateLimit.limit.toString(),
+          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
+        },
+      },
     );
   } catch (error) {
     if (error instanceof ZodError) {
