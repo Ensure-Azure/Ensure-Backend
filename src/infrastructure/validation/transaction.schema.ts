@@ -19,6 +19,21 @@ export const accountIdSchema = z
   .min(1)
   .max(100);
 
+export const listTransactionsQuerySchema = z.object({
+  accountId: accountIdSchema.optional(),
+  status: z
+    .enum([
+      "RECEIVED",
+      "PROCESSING",
+      "SCORED",
+      "FLAGGED",
+      "FAILED",
+    ])
+    .optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
 export const createTransactionSchema = z
   .object({
     transactionId: transactionIdSchema,

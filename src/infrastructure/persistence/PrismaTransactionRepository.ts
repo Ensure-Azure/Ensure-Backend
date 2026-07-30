@@ -1,4 +1,8 @@
-import type { TransactionRepository } from "../../application/ports/TransactionRepository";
+import type {
+  ListTransactionsOptions,
+  TransactionList,
+  TransactionRepository,
+} from "../../application/ports/TransactionRepository";
 import type { Transaction } from "../../domain/entities/Transaction";
 import { prisma } from "../database/prisma";
 import { PrismaTransactionMapper } from "../mappers/PrismaTransactionMapper";
@@ -36,6 +40,37 @@ export class PrismaTransactionRepository
     return transaction
       ? PrismaTransactionMapper.toDomain(transaction)
       : null;
+  }
+
+  async list(
+    options: ListTransactionsOptions,
+  ): Promise<TransactionList> {
+    const where = {
+      ...(options.accountId
+        ? { account_id: options.accountId }
+        : {}),
+      ...(options.status ? { status: options.status } : {}),
+    };
+
+    const [transactions, total] = await prisma.$transaction([
+      prisma.transactions.findMany({
+        where,
+        orderBy: [
+          { occurred_at: "desc" },
+          { id: "desc" },
+        ],
+        skip: options.offset,
+        take: options.limit,
+      }),
+      prisma.transactions.count({ where }),
+    ]);
+
+    return {
+      transactions: transactions.map((transaction) =>
+        PrismaTransactionMapper.toDomain(transaction),
+      ),
+      total,
+    };
   }
 
   async findRecentByAccount(

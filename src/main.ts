@@ -1,6 +1,7 @@
 import { CreateTransaction } from "./application/use-cases/CreateTransaction";
 import { GetTransactionByTransactionId } from "./application/use-cases/GetTransactionByTransactionId";
 import { GetDocumentMetadata } from "./application/use-cases/GetDocumentMetadata";
+import { ListTransactions } from "./application/use-cases/ListTransactions";
 import { SaveDocumentMetadata } from "./application/use-cases/SaveDocumentMetadata";
 import { ScoreTransaction } from "./application/use-cases/ScoreTransaction";
 
@@ -40,6 +41,10 @@ export const getTransactionByTransactionId =
   new GetTransactionByTransactionId(
     transactionRepository,
   );
+
+export const listTransactions = new ListTransactions(
+  transactionRepository,
+);
 
 export const scoreTransaction =
   new ScoreTransaction(
