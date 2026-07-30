@@ -21,3 +21,5 @@ El motor no usa valores por defecto. Antes de puntuar una transacción, exige qu
 Si falta o es inválido alguno, la transacción queda con estado `FAILED`, se registra un error en el servidor y `POST /api/events/transactions` devuelve `503`. Así una configuración incompleta no deja transacciones sin analizar de forma silenciosa.
 
 La configuración inicial está en `docs/fraud-settings.sql`. El script solo inserta claves ausentes y no sobrescribe los valores que un administrador haya ajustado.
+
+Para una demostración reproducible de fraude, `docs/fraud-demo-fixture.sql` configura los parámetros de prueba y el comercio de riesgo `merchant-final-risk`. Ese archivo actualiza valores existentes y no debe usarse como configuración operativa definitiva.
